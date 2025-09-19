@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "271401908440",
+    "project_id": "online-queue-59160",
+    "storage_bucket": "online-queue-59160.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:271401908440:android:1d4a5eb36cc00f1894ffad",
+        "android_client_info": {
+          "package_name": "com.example.online_queue"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB7KhZREGp4XD07BoBSdqs5cUJuCUyQWOU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
