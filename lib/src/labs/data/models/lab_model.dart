@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:online_queue/src/labs/domain/entities/lab_entity.dart';
 
 class LabModel {
   final String id;
@@ -52,5 +53,16 @@ class LabModel {
 
   factory LabModel.fromSnapshot(DocumentSnapshot<Map<String, dynamic>> snap) {
     return LabModel.fromMap(snap.id, snap.data() ?? <String, dynamic>{});
+  }
+
+  factory LabModel.fromEntity(LabEntity lab) {
+    return LabModel(
+      lab.id,
+      lab.title,
+      lab.deadline,
+      lab.isOpen,
+      lab.subject,
+      lab.description,
+    );
   }
 }
