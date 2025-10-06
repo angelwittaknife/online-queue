@@ -25,8 +25,4 @@ class LabEntity {
       lab.description,
     );
   }
-  @override
-  String toString() {
-    return "${id} ${title}";
-  }
 } 

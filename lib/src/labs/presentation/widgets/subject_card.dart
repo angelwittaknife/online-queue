@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:online_queue/src/labs/domain/entities/subject_entity.dart';
-import 'lab_item.dart';
 
 class SubjectCard extends StatelessWidget {
   final SubjectEntity subject;

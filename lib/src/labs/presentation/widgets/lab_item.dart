@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:online_queue/src/labs/data/models/lab_model.dart'; // keep for context if needed
 import 'package:online_queue/src/labs/domain/entities/lab_entity.dart';
 
 class LabItem extends StatelessWidget {

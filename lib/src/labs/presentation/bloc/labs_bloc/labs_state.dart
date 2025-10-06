@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
 import 'package:online_queue/src/labs/domain/entities/lab_entity.dart';
-import 'package:online_queue/src/labs/domain/entities/subject_entity.dart';
 
 abstract class LabsState extends Equatable {
   const LabsState();
