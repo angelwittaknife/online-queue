@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:online_queue/src/labs/domain/entities/lab_entity.dart';
 
 class LabItem extends StatelessWidget {
   final LabEntity lab;
-  final VoidCallback? onTap;
+ 
   final bool dense;
 
   const LabItem({
     super.key,
     required this.lab,
-    this.onTap,
+
     this.dense = false,
   });
 
@@ -43,7 +44,11 @@ class LabItem extends StatelessWidget {
       margin: EdgeInsets.symmetric(horizontal: 12, vertical: dense ? 6 : 8),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
+        onTap:
+            () {
+             
+              context.goNamed('queue', extra: lab.id);
+            },
         child: Padding(
           padding: EdgeInsets.symmetric(
             horizontal: 12,

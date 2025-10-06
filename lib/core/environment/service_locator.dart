@@ -10,6 +10,9 @@ import 'package:online_queue/src/labs/domain/usecases/get_lab_usecase.dart';
 import 'package:online_queue/src/labs/domain/usecases/get_labs_by_subj_usecase.dart';
 import 'package:online_queue/src/labs/domain/usecases/get_labs_usecase.dart';
 import 'package:online_queue/src/labs/domain/usecases/get_subjects_usecase.dart';
+import 'package:online_queue/src/queue/data/datasources/queue_remote_datasource.dart';
+import 'package:online_queue/src/queue/data/repositories/queue_repository.dart';
+import 'package:online_queue/src/queue/domain/repositories/queue_repository.dart';
 
 final sl = GetIt.instance;
 
@@ -20,6 +23,7 @@ sl
 
 //repositories
 ..registerLazySingleton<LabRepository>(()=>LabRepositoryImpl())
+..registerLazySingleton<QueueRepository>(()=>QueueRepositoryImpl())
 //LabUsecases
 ..registerLazySingleton<GetLabsUsecase>(()=>GetLabsUsecase(sl()))
 ..registerLazySingleton<CreateLabUsecase>(()=>CreateLabUsecase(sl()))
@@ -31,7 +35,9 @@ sl
 //Bloc`s
 
 //Datasource
+..registerLazySingleton<QueueRemoteDatasource>(()=>QueueRemoteDatasource())
 ..registerLazySingleton<LabRemoteDatasource>(()=>LabRemoteDatasource());
+
 
 
  

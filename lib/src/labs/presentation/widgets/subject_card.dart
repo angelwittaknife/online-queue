@@ -36,6 +36,7 @@ class SubjectCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         onTap: onTap ??
             () {
+                print("AA");
               context.goNamed('labs', extra: subject.name);
             },
         child: Padding(
