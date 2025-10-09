@@ -22,4 +22,5 @@ class QueueModel {
   factory QueueModel.fromEntity(QueueEntity queue) {
     return QueueModel(queue.nickname, queue.numInQueue, queue.userId);
   }
+  
 }

@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:online_queue/core/environment/service_locator.dart';
 import 'package:online_queue/core/errors/failures.dart';
 import 'package:online_queue/src/queue/data/datasources/queue_remote_datasource.dart';
+import 'package:online_queue/src/queue/data/models/queue_model.dart';
 import 'package:online_queue/src/queue/domain/entities/queue_entity.dart';
 import 'package:online_queue/src/queue/domain/repositories/queue_repository.dart';
 
@@ -17,14 +18,17 @@ class QueueRepositoryImpl implements QueueRepository {
       );
     });
   }
-  
-  @override
-  Future<Either<Failure, List<QueueEntity>>> addQueue(QueueEntity queue, String labId) {
-    // TODO: implement addQueue
-    throw UnimplementedError();
-  }
-  
- 
 
-  
+  @override
+  Future<Either<Failure, bool>> addQueue(
+    QueueEntity queue,
+    String labId,
+  ) async {
+    final result = await datasource.addQueue(
+      QueueModel.fromEntity(queue),
+      labId,
+    );
+
+    return result.fold(Left.new, Right.new);
+  }
 }

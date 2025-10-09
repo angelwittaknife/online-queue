@@ -15,3 +15,7 @@ class ServerFailure extends Failure {
 class NotFoundFailure extends Failure {
   const NotFoundFailure(super.message);
 }
+
+class FirebaseAuthFailure extends Failure {
+  const FirebaseAuthFailure(super.message);
+}

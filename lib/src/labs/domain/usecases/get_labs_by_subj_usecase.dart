@@ -4,7 +4,7 @@ import 'package:online_queue/core/usecase/usecase.dart';
 import 'package:online_queue/src/labs/domain/entities/lab_entity.dart';
 import 'package:online_queue/src/labs/domain/repositories/lab_repository.dart';
 
-class GetLabsBySubjectUsecase extends UseCase<List<LabEntity>, String> {
+class GetLabsBySubjectUsecase extends UseCase<Future<Either<Failure,List<LabEntity>>>, String> {
   final LabRepository repository;
 
   const GetLabsBySubjectUsecase(this.repository);
