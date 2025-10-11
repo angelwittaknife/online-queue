@@ -1,4 +1,3 @@
-// auth_event.dart
 part of 'auth_bloc.dart';
 
 abstract class AuthEvent extends Equatable {
@@ -7,21 +6,37 @@ abstract class AuthEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class RegisterRequested extends AuthEvent {
-  final StudentEntity student;
-  const RegisterRequested(this.student);
-  @override
-  List<Object?> get props => [student];
-}
-
-class SignInRequested extends AuthEvent {
+// --- Управление формой ---
+class EmailChanged extends AuthEvent {
   final String email;
-  final String password;
-  const SignInRequested({required this.email, required this.password});
+  const EmailChanged(this.email);
   @override
-  List<Object?> get props => [email, password];
+  List<Object?> get props => [email];
 }
 
+class PasswordChanged extends AuthEvent {
+  final String password;
+  const PasswordChanged(this.password);
+  @override
+  List<Object?> get props => [password];
+}
+
+class NicknameChanged extends AuthEvent {
+  final String nickname;
+  const NicknameChanged(this.nickname);
+  @override
+  List<Object?> get props => [nickname];
+}
+
+class ToggleAuthMode extends AuthEvent {
+  const ToggleAuthMode();
+}
+
+class SubmitAuthForm extends AuthEvent {
+  const SubmitAuthForm();
+}
+
+// --- Остальные действия ---
 class SignOutRequested extends AuthEvent {
   const SignOutRequested();
 }

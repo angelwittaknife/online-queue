@@ -22,76 +22,134 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final UpdateNicknameUsecase _updateNickname = sl<UpdateNicknameUsecase>();
   final GetCurrentUidUsecase _getCurrentUid = sl<GetCurrentUidUsecase>();
 
-  AuthBloc() : super(AuthInitial()) {
-    on<RegisterRequested>(_handleRegister);
-    on<SignInRequested>(_handleSignIn);
-    on<SignOutRequested>(_handleSignOut);
-    on<LoadProfileRequested>(_handleLoadProfile);
-    on<UpdateNicknameRequested>(_handleUpdateNickname);
-    on<CheckCurrentUidRequested>(_handleCheckCurrentUid);
+  AuthBloc() : super(const AuthFormState()) {
+    on<EmailChanged>(_onEmailChanged);
+    on<PasswordChanged>(_onPasswordChanged);
+    on<NicknameChanged>(_onNicknameChanged);
+    on<ToggleAuthMode>(_onToggleAuthMode);
+    on<SubmitAuthForm>(_onSubmitForm);
+    on<SignOutRequested>(_onSignOutRequested);
+    on<LoadProfileRequested>(_onLoadProfileRequested);
+    on<UpdateNicknameRequested>(_onUpdateNicknameRequested);
+    on<CheckCurrentUidRequested>(_onCheckCurrentUidRequested);
   }
 
-  /// 🔁 Универсальный шаблон для обработки usecase-результатов
-  Future<void> _runUsecase<T>(
-    Emitter<AuthState> emit,
-    Future<Either<Failure, T>> Function() call,
-    void Function(T value) onSuccess,
-  ) async {
+  // --- UI events ---
+  void _onEmailChanged(EmailChanged e, Emitter<AuthState> emit) {
+    if (state is AuthFormState) {
+      emit((state as AuthFormState).copyWith(email: e.email, error: null));
+    }
+  }
+
+  void _onPasswordChanged(PasswordChanged e, Emitter<AuthState> emit) {
+    if (state is AuthFormState) {
+      emit((state as AuthFormState).copyWith(password: e.password, error: null));
+    }
+  }
+
+  void _onNicknameChanged(NicknameChanged e, Emitter<AuthState> emit) {
+    if (state is AuthFormState) {
+      emit((state as AuthFormState).copyWith(nickname: e.nickname, error: null));
+    }
+  }
+
+  void _onToggleAuthMode(ToggleAuthMode e, Emitter<AuthState> emit) {
+    if (state is AuthFormState) {
+      final current = state as AuthFormState;
+      final newMode = current.mode == AuthMode.signIn
+          ? AuthMode.register
+          : AuthMode.signIn;
+      emit(current.copyWith(mode: newMode, error: null));
+    }
+  }
+
+  Future<void> _onSubmitForm(SubmitAuthForm e, Emitter<AuthState> emit) async {
+    if (state is! AuthFormState) return;
+    final current = state as AuthFormState;
+
+    // 🔹 Валидация
+    if (current.email.isEmpty || current.password.isEmpty) {
+      emit(current.copyWith(error: 'Введите email и пароль'));
+      return;
+    }
+    if (current.mode == AuthMode.register && current.nickname.isEmpty) {
+      emit(current.copyWith(error: 'Введите имя пользователя'));
+      return;
+    }
+
+    emit(current.copyWith(isLoading: true, error: null));
+
+    // 🔹 Выполнение входа / регистрации
+    if (current.mode == AuthMode.signIn) {
+      final result = await _signIn(
+        param: SignInParams(
+          email: current.email,
+          password: current.password,
+        ),
+      );
+
+      result.fold(
+        (failure) =>
+            emit(current.copyWith(isLoading: false, error: failure.message)),
+        (uid) => emit(Authenticated(uid)),
+      );
+    } else {
+      final result = await _register(
+        param: StudentEntity(
+          uid: '',
+          nickname: current.nickname,
+          email: current.email,
+          password: current.password,
+        ),
+      );
+
+      result.fold(
+        (failure) =>
+            emit(current.copyWith(isLoading: false, error: failure.message)),
+        (uid) => emit(Authenticated(uid)),
+      );
+    }
+  }
+
+  // --- Logic events ---
+  Future<void> _onSignOutRequested(
+      SignOutRequested e, Emitter<AuthState> emit) async {
     emit(AuthLoading());
-    final result = await call();
+    final result = await _signOut();
     result.fold(
-      (failure) => emit(AuthFailure(_mapFailureToMessage(failure))),
-      onSuccess,
+      (f) => emit(AuthFailure(f.message)),
+      (_) => emit(const AuthFormState()), // возвращаем форму после выхода
     );
   }
 
-  Future<void> _handleRegister(RegisterRequested event, Emitter<AuthState> emit) async {
-    await _runUsecase<String>(
-      emit,
-      () => _register(param: event.student),
-      (uid) => emit(Authenticated(uid)),
-    );
-  }
-
-  Future<void> _handleSignIn(SignInRequested event, Emitter<AuthState> emit) async {
-    await _runUsecase<String>(
-      emit,
-      () => _signIn(param: SignInParams(email: event.email, password: event.password)),
-      (uid) => emit(Authenticated(uid)),
-    );
-  }
-
-  Future<void> _handleSignOut(SignOutRequested event, Emitter<AuthState> emit) async {
-    await _runUsecase<void>(
-      emit,
-      () => _signOut(),
-      (_) => emit(Unauthenticated()),
-    );
-  }
-
-  Future<void> _handleLoadProfile(LoadProfileRequested event, Emitter<AuthState> emit) async {
-    await _runUsecase<StudentEntity>(
-      emit,
-      () => _getProfile(param: event.uid),
+  Future<void> _onLoadProfileRequested(
+      LoadProfileRequested e, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+    final result = await _getProfile(param: e.uid);
+    result.fold(
+      (f) => emit(AuthFailure(f.message)),
       (student) => emit(ProfileLoadSuccess(student)),
     );
   }
 
-  Future<void> _handleUpdateNickname(UpdateNicknameRequested event, Emitter<AuthState> emit) async {
-    await _runUsecase<void>(
-      emit,
-      () => _updateNickname(param: UpdateNicknameParams(uid: event.uid, newNickname: event.newNickname)),
-      (_) => emit(NicknameUpdateSuccess(event.newNickname)),
+  Future<void> _onUpdateNicknameRequested(
+      UpdateNicknameRequested e, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+    final result = await _updateNickname(
+      param: UpdateNicknameParams(uid: e.uid, newNickname: e.newNickname),
+    );
+    result.fold(
+      (f) => emit(AuthFailure(f.message)),
+      (_) => emit(NicknameUpdateSuccess(e.newNickname)),
     );
   }
 
-  Future<void> _handleCheckCurrentUid(CheckCurrentUidRequested event, Emitter<AuthState> emit) async {
-    await _runUsecase<String>(
-      emit,
-      () => _getCurrentUid(),
-      (uid) => emit(Authenticated(uid)),
+  Future<void> _onCheckCurrentUidRequested(
+      CheckCurrentUidRequested e, Emitter<AuthState> emit) async {
+    final result = await _getCurrentUid();
+    result.fold(
+      (f) => emit(const AuthFormState()), // нет авторизации
+      (uid) => emit(Authenticated(uid)), // уже авторизован
     );
   }
-
-  String _mapFailureToMessage(Failure failure) => failure.message;
 }

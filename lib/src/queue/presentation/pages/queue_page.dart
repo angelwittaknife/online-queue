@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:online_queue/core/environment/service_locator.dart';
-import 'package:online_queue/src/auth/domain/usecases/get_current_uid_usecase.dart';
 import 'package:online_queue/src/auth/domain/usecases/get_profile_usecase.dart';
 import 'package:online_queue/src/auth/domain/entities/student_entity.dart';
 import 'package:online_queue/src/queue/domain/entities/queue_entity.dart';
@@ -31,7 +30,11 @@ class QueuePage extends StatelessWidget {
         listener: (context, state) {
           if (state is QueueLoadFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message.isNotEmpty ? state.message : 'Ошибка')),
+              SnackBar(
+                content: Text(
+                  state.message.isNotEmpty ? state.message : 'Ошибка',
+                ),
+              ),
             );
           } else if (state is QueueLoadSuccess && state.recentlyAdded) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -64,12 +67,12 @@ class QueuePage extends StatelessWidget {
   }
 
   Widget _buildError(String message) => Center(
-        child: Text(
-          message,
-          style: const TextStyle(color: Colors.redAccent, fontSize: 16),
-          textAlign: TextAlign.center,
-        ),
-      );
+    child: Text(
+      message,
+      style: const TextStyle(color: Colors.redAccent, fontSize: 16),
+      textAlign: TextAlign.center,
+    ),
+  );
 
   Widget _buildQueueList(BuildContext context, QueueLoadSuccess state) {
     final occupied = {for (final q in state.queue) q.numInQueue: q};
@@ -87,7 +90,7 @@ class QueuePage extends StatelessWidget {
                 ? QueueItem(item: item)
                 : SlotItem(
                     slotNumber: slotNumber,
-                    onTap: () => _onAddSlot(context, slotNumber, state),
+                    onTap: () => _onAddSlot(context, slotNumber),
                   );
           },
         ),
@@ -98,59 +101,25 @@ class QueuePage extends StatelessWidget {
   }
 
   Widget _buildOverlay(String text) => Positioned.fill(
-        child: Container(
-          color: Colors.black45,
-          alignment: Alignment.center,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(height: 12),
-              Text(
-                text,
-                style: const TextStyle(color: Colors.white),
-              ),
-            ],
-          ),
-        ),
-      );
+    child: Container(
+      color: Colors.black45,
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(height: 12),
+          Text(text, style: const TextStyle(color: Colors.white)),
+        ],
+      ),
+    ),
+  );
 
   // Обновлённый метод: проверяет текущего пользователя, подтягивает nickname,
   // запрещает занять более одного слота в одной очереди и делает dispatch в Bloc.
- void _onAddSlot(BuildContext context, int slotNumber, QueueLoadSuccess state) async {
-  final auth = sl<FirebaseAuth>();
-  final user = auth.currentUser;
-
-  if (user == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Требуется войти в аккаунт')),
+  _onAddSlot(BuildContext context, int slotNumber) {
+    context.read<QueueBloc>().add(
+      TryAddSlot(slotNumber: slotNumber, labId: labId),
     );
-    return;
   }
-
-  final uid = user.uid;
-
-  final alreadyInQueue = state.queue.any((q) => q.userId == uid);
-  if (alreadyInQueue) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Вы уже в очереди для этой лаборатории')),
-    );
-    return;
-  }
-
-  final getProfileUsecase = sl<GetProfileUsecase>();
-  final Either<Failure, StudentEntity> profileRes =
-      await getProfileUsecase.call(param: uid);
-
-  if (!context.mounted) return;
-
-  final nickname = profileRes.fold(
-    (_) => uid,
-    (student) => student.nickname,
-  );
-
-  final entity = QueueEntity(nickname, slotNumber, uid);
-  context.read<QueueBloc>().add(AddQueueItem(item: entity, labId: labId));
-}
-
 }

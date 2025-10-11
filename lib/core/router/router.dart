@@ -10,11 +10,13 @@ import 'package:online_queue/src/queue/presentation/pages/queue_page.dart';
 
 final FirebaseAuth _auth = sl<FirebaseAuth>();
 
+/// 🔄 Следит за изменением токена и статуса авторизации
 class AuthChangeNotifier extends ChangeNotifier {
   late final StreamSubscription<User?> _subscription;
 
   AuthChangeNotifier() {
-    _subscription = _auth.authStateChanges().listen((_) {
+    // idTokenChanges реагирует и на logout, и на истечение токена, и на удалённого пользователя
+    _subscription = _auth.idTokenChanges().listen((_) {
       notifyListeners();
     });
   }
@@ -29,18 +31,29 @@ class AuthChangeNotifier extends ChangeNotifier {
 final authChangeNotifier = AuthChangeNotifier();
 
 final router = GoRouter(
-  // Не указываем fixed initialLocation, чтобы GoRouter сам выбрал маршрут
   initialLocation: '/auth',
-
   refreshListenable: authChangeNotifier,
-
+  debugLogDiagnostics: true, // 👀 помогает отладить редиректы
   redirect: (context, state) async {
-    await _auth.currentUser?.reload();
     final user = _auth.currentUser;
-    print(user);
-    final isLoggedIn = user != null;
     final goingToAuth = state.matchedLocation == '/auth';
 
+    // 🧠 Принудительно обновляем данные пользователя из Firebase
+    if (user != null) {
+      try {
+        await user.reload(); // проверка актуальности токена
+      } on FirebaseAuthException catch (_) {
+        await _auth.signOut();
+        return '/auth';
+      } catch (_) {
+        await _auth.signOut();
+        return '/auth';
+      }
+    }
+
+    final isLoggedIn = _auth.currentUser != null;
+
+    // 🧭 Роутинг в зависимости от статуса
     if (!isLoggedIn && !goingToAuth) return '/auth';
     if (isLoggedIn && goingToAuth) return '/subjects';
     return null;
@@ -52,40 +65,41 @@ final router = GoRouter(
       name: 'auth',
       builder: (_, __) => const AuthPage(),
     ),
+
+    /// Главная страница после входа
     GoRoute(
       path: '/subjects',
       name: 'subjects',
       builder: (_, __) => const SubjectsPage(),
-    ),
-    GoRoute(
-      path: '/labs',
-      name: 'labs',
-      pageBuilder: (context, state) {
-        final subject = state.extra as String?;
-        if (subject == null) {
-          return const NoTransitionPage(
-            child: Scaffold(
-              body: Center(child: Text('Ошибка: предмет не передан')),
-            ),
-          );
-        }
-        return NoTransitionPage(child: LabsPage(subject: subject));
-      },
-    ),
-    GoRoute(
-      path: '/queue',
-      name: 'queue',
-      pageBuilder: (context, state) {
-        final labId = state.extra as String?;
-        if (labId == null) {
-          return const NoTransitionPage(
-            child: Scaffold(
-              body: Center(child: Text('Ошибка: лаборатория не передана')),
-            ),
-          );
-        }
-        return NoTransitionPage(child: QueuePage(labId: labId));
-      },
+
+      routes: [
+        GoRoute(
+          path: 'labs',
+          name: 'labs',
+          builder: (context, state) {
+            final subject = state.extra as String?;
+            if (subject == null) {
+              return const Scaffold(
+                body: Center(child: Text('Ошибка: предмет не передан')),
+              );
+            }
+            return LabsPage(subject: subject);
+          },
+        ),
+        GoRoute(
+          path: 'queue',
+          name: 'queue',
+          builder: (context, state) {
+            final labId = state.extra as String?;
+            if (labId == null) {
+              return const Scaffold(
+                body: Center(child: Text('Ошибка: лаборатория не передана')),
+              );
+            }
+            return QueuePage(labId: labId);
+          },
+        ),
+      ],
     ),
   ],
 );

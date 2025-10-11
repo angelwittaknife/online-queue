@@ -15,7 +15,7 @@ class QueueModel {
     return QueueModel(
       map['nickname'] as String? ?? '',
       map['numInQueue'] as int? ?? 0,
-      map['userId'] as String? ?? '',
+      map['studentId'] as String? ?? '',
     );
   }
 

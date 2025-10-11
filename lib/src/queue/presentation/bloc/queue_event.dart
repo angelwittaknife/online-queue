@@ -24,3 +24,8 @@ class AddQueueItem extends QueueEvent {
   @override
   List<Object?> get props => [item, labId];
 }
+class TryAddSlot extends QueueEvent {
+  final int slotNumber;
+  final String labId;
+  const TryAddSlot({required this.slotNumber, required this.labId});
+}

@@ -100,27 +100,4 @@ class SubjectsPage extends StatelessWidget {
   }
 }
 
-class _DecorCircle extends StatelessWidget {
-  final double size;
-  final Color color;
-  const _DecorCircle({required this.size, required this.color});
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.15),
-            blurRadius: 24,
-            offset: Offset(0, 8),
-          ),
-        ],
-      ),
-    );
-  }
-}

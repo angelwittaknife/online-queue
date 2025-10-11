@@ -40,3 +40,43 @@ class NicknameUpdateSuccess extends AuthState {
   @override
   List<Object?> get props => [nickname];
 }
+enum AuthMode { signIn, register }
+
+class AuthFormState extends AuthState {
+  final String email;
+  final String password;
+  final String nickname;
+  final AuthMode mode;
+  final bool isLoading;
+  final String? error;
+
+  const AuthFormState({
+    this.email = '',
+    this.password = '',
+    this.nickname = '',
+    this.mode = AuthMode.signIn,
+    this.isLoading = false,
+    this.error,
+  });
+
+  AuthFormState copyWith({
+    String? email,
+    String? password,
+    String? nickname,
+    AuthMode? mode,
+    bool? isLoading,
+    String? error,
+  }) {
+    return AuthFormState(
+      email: email ?? this.email,
+      password: password ?? this.password,
+      nickname: nickname ?? this.nickname,
+      mode: mode ?? this.mode,
+      isLoading: isLoading ?? this.isLoading,
+      error: error,
+    );
+  }
+
+  @override
+  List<Object?> get props => [email, password, nickname, mode, isLoading, error];
+}
